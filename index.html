@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calculadora de Ahorros</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -43,6 +43,7 @@
       max-width: 900px;
       margin: auto;
       padding: 20px;
+      position: relative;
     }
 
     h1 {
@@ -86,8 +87,6 @@
     }
 
     button {
-      width: 100%;
-      margin-top: 20px;
       background-color: var(--azul);
       color: white;
       border: none;
@@ -103,12 +102,18 @@
     }
 
     #themeToggleBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
       width: auto;
       padding: 8px 16px;
-      margin-bottom: 20px;
-      float: right;
       background-color: var(--azul-oscuro);
       border-radius: 4px;
+    }
+
+    #toggleTableBtn {
+      width: 100%;
+      margin-top: 20px;
     }
 
     table {
@@ -166,9 +171,11 @@
         font-size: 0.75rem;
       }
       #themeToggleBtn {
-        float: none;
+        position: static;
+        display: block;
         width: 100%;
         margin-bottom: 10px;
+        border-radius: 5px;
       }
     }
   </style>
@@ -233,7 +240,6 @@
       } else if (savedTheme === 'light') {
         setDarkTheme(false);
       } else {
-        // Si no hay guardado, activar modo oscuro si sistema lo prefiere
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
           setDarkTheme(true);
         }
