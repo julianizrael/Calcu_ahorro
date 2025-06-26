@@ -14,22 +14,14 @@
       --texto: #333;
       --fondo: #ffffff;
     }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --azul-claro: #102a43;
-        --azul: #63ccff;
-        --azul-oscuro: #bee3f8;
-        --gris-fondo: #1e293b;
-        --texto: #f1f5f9;
-        --fondo: #0f172a;
-      }
+    .dark-mode {
+      --azul-claro: #102a43;
+      --azul: #63ccff;
+      --azul-oscuro: #bee3f8;
+      --gris-fondo: #1e293b;
+      --texto: #f1f5f9;
+      --fondo: #0f172a;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
@@ -37,33 +29,28 @@
       background: var(--gris-fondo);
       color: var(--texto);
     }
-
     .container {
       max-width: 900px;
       margin: auto;
       padding: 20px;
     }
-
     h1 {
       text-align: center;
       font-size: 2.2rem;
       color: var(--azul-oscuro);
       margin-bottom: 1.5rem;
     }
-
     .input-group {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
     }
-
     label {
       font-size: 0.95rem;
       font-weight: 600;
       display: flex;
       flex-direction: column;
     }
-
     input[type="number"], input[type="text"] {
       padding: 10px;
       font-size: 1rem;
@@ -73,7 +60,6 @@
       background-color: var(--fondo);
       color: var(--texto);
     }
-
     #summary {
       background: var(--azul-claro);
       padding: 15px;
@@ -81,7 +67,6 @@
       font-size: 1rem;
       margin-top: 30px;
     }
-
     button {
       width: 100%;
       margin-top: 20px;
@@ -93,46 +78,34 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     button:hover {
       opacity: 0.9;
     }
-
     table {
       margin-top: 20px;
       border-collapse: collapse;
       width: 100%;
       font-size: 0.85rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       background: var(--fondo);
       color: var(--texto);
     }
-
     th, td {
       padding: 8px;
       text-align: right;
       border: 1px solid #d0e2f2;
     }
-
     th {
       background-color: var(--azul-claro);
       color: var(--azul-oscuro);
     }
-
     tr:nth-child(even) {
       background-color: rgba(0, 0, 0, 0.05);
     }
-
-    #chartContainer {
-      margin-top: 30px;
-    }
-
     canvas {
       width: 100% !important;
       height: auto !important;
       max-height: 400px;
     }
-
     @media (max-width: 600px) {
       h1 {
         font-size: 1.6rem;
@@ -155,156 +128,136 @@
 <body>
   <div class="container">
     <h1>Calculadora de Ahorros</h1>
-
     <div style="text-align: right; margin-bottom: 10px;">
       <button onclick="toggleTheme()">Cambiar tema</button>
     </div>
-
     <div class="input-group">
-      <label>Ahorro mensual ($): <input type="number" id="monthlySavings" value="300" /></label>
-      <label>Edad actual: <input type="number" id="currentAge" value="30" /></label>
-      <label>Edad objetivo: <input type="number" id="targetAge" value="65" /></label>
-      <label>Rendimiento anual (%): <input type="number" id="annualReturn" value="6" /></label>
-      <label>Incremento ahorro anual (%): <input type="number" id="annualIncrease" value="3" /></label>
+      <label>Ahorro mensual ($): <input type="number" id="monthlySavings" value="300"></label>
+      <label>Edad actual: <input type="number" id="currentAge" value="30"></label>
+      <label>Edad objetivo: <input type="number" id="targetAge" value="65"></label>
+      <label>Rendimiento anual (%): <input type="number" id="annualReturn" value="6"></label>
+      <label>Incremento ahorro anual (%): <input type="number" id="annualIncrease" value="3"></label>
     </div>
-
     <h3>Metas de gasto</h3>
     <div class="input-group" id="goalList">
-      <label>Edad meta: <input type="number" class="goalAge" value="40" /></label>
-      <label>Monto a gastar ($): <input type="number" class="goalAmount" value="20000" /></label>
+      <label>Edad meta: <input type="number" class="goalAge" value="40"></label>
+      <label>Monto a gastar ($): <input type="number" class="goalAmount" value="20000"></label>
     </div>
     <button onclick="addGoalInput()">Agregar otra meta</button>
-
     <div id="summary"></div>
     <div id="chartContainer"><canvas id="savingsChart"></canvas></div>
+    <table id="resultsTable"></table>
+  </div>
 
-    <script>
-      function toggleTheme() {
-        const root = document.documentElement;
-        const darkModeActive = document.body.classList.toggle('dark-mode');
-        if (darkModeActive) {
-          root.style.setProperty('--azul-claro', '#102a43');
-          root.style.setProperty('--azul', '#63ccff');
-          root.style.setProperty('--azul-oscuro', '#bee3f8');
-          root.style.setProperty('--gris-fondo', '#1e293b');
-          root.style.setProperty('--texto', '#f1f5f9');
-          root.style.setProperty('--fondo', '#0f172a');
-          localStorage.setItem('theme', 'dark');
-        } else {
-          root.style.setProperty('--azul-claro', '#e3f2fd');
-          root.style.setProperty('--azul', '#1976d2');
-          root.style.setProperty('--azul-oscuro', '#0d47a1');
-          root.style.setProperty('--gris-fondo', '#f4f8fb');
-          root.style.setProperty('--texto', '#333');
-          root.style.setProperty('--fondo', '#ffffff');
-          localStorage.setItem('theme', 'light');
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+      localStorage.setItem('theme', theme);
+    }
+
+    function addGoalInput() {
+      const goalList = document.getElementById('goalList');
+      const labelEdad = document.createElement('label');
+      const inputEdad = document.createElement('input');
+      inputEdad.type = 'number';
+      inputEdad.className = 'goalAge';
+      inputEdad.addEventListener('input', calcularAhorros);
+      labelEdad.innerText = 'Edad meta: ';
+      labelEdad.appendChild(inputEdad);
+      const labelMonto = document.createElement('label');
+      const inputMonto = document.createElement('input');
+      inputMonto.type = 'number';
+      inputMonto.className = 'goalAmount';
+      inputMonto.addEventListener('input', calcularAhorros);
+      labelMonto.innerText = 'Monto a gastar ($): ';
+      labelMonto.appendChild(inputMonto);
+      goalList.appendChild(labelEdad);
+      goalList.appendChild(labelMonto);
+    }
+
+    function calcularAhorros() {
+      const edadActual = parseInt(document.getElementById('currentAge').value);
+      const edadObjetivo = parseInt(document.getElementById('targetAge').value);
+      const rendimiento = parseFloat(document.getElementById('annualReturn').value) / 100;
+      const incrementoAhorro = parseFloat(document.getElementById('annualIncrease').value) / 100;
+      let ahorroMensual = parseFloat(document.getElementById('monthlySavings').value);
+
+      const metas = Array.from(document.querySelectorAll('.goalAge')).map((input, i) => ({
+        edad: parseInt(input.value),
+        monto: parseFloat(document.querySelectorAll('.goalAmount')[i].value)
+      })).filter(meta => !isNaN(meta.edad) && !isNaN(meta.monto));
+
+      let saldo = 0;
+      let aporteAcumulado = 0;
+      let interesesGanados = 0;
+      const datos = [];
+      const filas = [];
+
+      for (let edad = edadActual; edad <= edadObjetivo; edad++) {
+        let saldoInicioAno = saldo;
+        for (let mes = 0; mes < 12; mes++) {
+          saldo += ahorroMensual;
+          aporteAcumulado += ahorroMensual;
+          saldo *= 1 + (rendimiento / 12);
         }
+        const gasto = metas.find(meta => meta.edad === edad);
+        if (gasto) saldo -= gasto.monto;
+        if (edad > edadActual) ahorroMensual *= 1 + incrementoAhorro;
+        interesesGanados = saldo - aporteAcumulado;
+        datos.push({ x: edad, y: parseFloat(saldo.toFixed(2)) });
+        filas.push(`<tr><td>${edad}</td><td>$${saldo.toFixed(2)}</td><td>$${aporteAcumulado.toFixed(2)}</td><td>$${interesesGanados.toFixed(2)}</td></tr>`);
       }
 
-      function addGoalInput() {
-        const goalList = document.getElementById('goalList');
+      document.getElementById('summary').innerHTML = `
+        <strong>Monto final:</strong> $${saldo.toLocaleString(undefined, { maximumFractionDigits: 0 })} <br>
+        <strong>Total aportado:</strong> $${aporteAcumulado.toLocaleString(undefined, { maximumFractionDigits: 0 })} <br>
+        <strong>Intereses ganados:</strong> $${interesesGanados.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+      `;
 
-        const labelEdad = document.createElement('label');
-        const inputEdad = document.createElement('input');
-        inputEdad.type = 'number';
-        inputEdad.className = 'goalAge';
-        inputEdad.addEventListener('input', calcularAhorros);
-        labelEdad.innerText = 'Edad meta: ';
-        labelEdad.appendChild(inputEdad);
-
-        const labelMonto = document.createElement('label');
-        const inputMonto = document.createElement('input');
-        inputMonto.type = 'number';
-        inputMonto.className = 'goalAmount';
-        inputMonto.addEventListener('input', calcularAhorros);
-        labelMonto.innerText = 'Monto a gastar ($): ';
-        labelMonto.appendChild(inputMonto);
-
-        goalList.appendChild(labelEdad);
-        goalList.appendChild(labelMonto);
-      }
-
-      function calcularAhorros() {
-        const edadActual = parseInt(document.getElementById('currentAge').value);
-        const edadObjetivo = parseInt(document.getElementById('targetAge').value);
-        const rendimiento = parseFloat(document.getElementById('annualReturn').value) / 100;
-        const incrementoAhorro = parseFloat(document.getElementById('annualIncrease').value) / 100;
-        let ahorroMensual = parseFloat(document.getElementById('monthlySavings').value);
-
-        const metas = Array.from(document.querySelectorAll('.goalAge')).map((input, i) => ({
-          edad: parseInt(input.value),
-          monto: parseFloat(document.querySelectorAll('.goalAmount')[i].value)
-        })).filter(meta => !isNaN(meta.edad) && !isNaN(meta.monto));
-
-        let saldo = 0;
-        const datos = [];
-
-        for (let edad = edadActual; edad <= edadObjetivo; edad++) {
-          for (let mes = 0; mes < 12; mes++) {
-            saldo += ahorroMensual;
-            saldo *= 1 + (rendimiento / 12);
-          }
-
-          const gasto = metas.find(meta => meta.edad === edad);
-          if (gasto) saldo -= gasto.monto;
-          if (edad > edadActual) ahorroMensual *= 1 + incrementoAhorro;
-
-          datos.push({ x: edad, y: parseFloat(saldo.toFixed(2)) });
-        }
-
-        document.getElementById('summary').innerText = `Monto final estimado a los ${edadObjetivo} años: $${saldo.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-
-        const ctx = document.getElementById('savingsChart').getContext('2d');
-        if (window.myChart) window.myChart.destroy();
-        window.myChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            datasets: [{
-              label: 'Total acumulado',
-              data: datos,
-              borderColor: '#1976d2',
-              backgroundColor: 'rgba(25, 118, 210, 0.2)',
-              fill: true
-            }]
+      const ctx = document.getElementById('savingsChart').getContext('2d');
+      if (window.myChart) window.myChart.destroy();
+      window.myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'Total acumulado',
+            data: datos,
+            borderColor: '#1976d2',
+            backgroundColor: 'rgba(25, 118, 210, 0.2)',
+            fill: true
+          }]
+        },
+        options: {
+          scales: {
+            x: { type: 'linear', title: { display: true, text: 'Edad' } },
+            y: { beginAtZero: true, title: { display: true, text: 'Saldo acumulado ($)' } }
           },
-          options: {
-            scales: {
-              x: {
-                type: 'linear',
-                title: { display: true, text: 'Edad' }
-              },
-              y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Saldo acumulado ($)' }
-              }
-            },
-            plugins: {
-              tooltip: {
-                callbacks: {
-                  label: ctx => `$${ctx.raw.y.toLocaleString()}`
-                }
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: ctx => `$${ctx.raw.y.toLocaleString()}`
               }
             }
           }
-        });
-      }
-
-      window.onload = function () {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-          document.body.classList.add('dark-mode');
-          toggleTheme();
-        } else if (savedTheme === 'light') {
-          document.body.classList.remove('dark-mode');
-          toggleTheme();
         }
-        calcularAhorros();
-      };
-
-      document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', calcularAhorros);
       });
-    </script>
-  </div>
+
+      document.getElementById('resultsTable').innerHTML = `
+        <thead><tr><th>Edad</th><th>Saldo</th><th>Aporte acumulado</th><th>Interés ganado</th></tr></thead>
+        <tbody>${filas.join('')}</tbody>
+      `;
+    }
+
+    window.onload = function () {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') document.body.classList.add('dark-mode');
+      calcularAhorros();
+    };
+
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', calcularAhorros);
+    });
+  </script>
 </body>
 </html>
