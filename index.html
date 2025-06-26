@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calculadora de Ahorros</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -14,44 +14,59 @@
       --texto: #333;
       --fondo: #ffffff;
     }
-    .dark-mode {
-      --azul-claro: #102a43;
-      --azul: #63ccff;
-      --azul-oscuro: #bee3f8;
-      --gris-fondo: #1e293b;
-      --texto: #f1f5f9;
-      --fondo: #0f172a;
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --azul-claro: #102a43;
+        --azul: #63ccff;
+        --azul-oscuro: #bee3f8;
+        --gris-fondo: #1e293b;
+        --texto: #f1f5f9;
+        --fondo: #0f172a;
+      }
     }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 0;
       background: var(--gris-fondo);
       color: var(--texto);
+      transition: background-color 0.3s, color 0.3s;
     }
+
     .container {
       max-width: 900px;
       margin: auto;
       padding: 20px;
+      position: relative;
     }
+
     h1 {
       text-align: center;
       font-size: 2.2rem;
       color: var(--azul-oscuro);
       margin-bottom: 1.5rem;
     }
+
     .input-group {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
     }
+
     label {
       font-size: 0.95rem;
       font-weight: 600;
       display: flex;
       flex-direction: column;
     }
-    input[type="number"], input[type="text"] {
+
+    input[type="number"] {
       padding: 10px;
       font-size: 1rem;
       border: 1px solid #ccc;
@@ -59,17 +74,19 @@
       margin-top: 6px;
       background-color: var(--fondo);
       color: var(--texto);
+      transition: background-color 0.3s, color 0.3s;
     }
+
     #summary {
       background: var(--azul-claro);
       padding: 15px;
       border-left: 5px solid var(--azul);
       font-size: 1rem;
       margin-top: 30px;
+      transition: background-color 0.3s, border-color 0.3s;
     }
+
     button {
-      width: 100%;
-      margin-top: 20px;
       background-color: var(--azul);
       color: white;
       border: none;
@@ -77,35 +94,66 @@
       font-size: 1rem;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
+
     button:hover {
       opacity: 0.9;
     }
+
+    #themeToggleBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: auto;
+      padding: 8px 16px;
+      background-color: var(--azul-oscuro);
+      border-radius: 4px;
+    }
+
+    #toggleTableBtn {
+      width: 100%;
+      margin-top: 20px;
+    }
+
     table {
       margin-top: 20px;
       border-collapse: collapse;
       width: 100%;
       font-size: 0.85rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       background: var(--fondo);
       color: var(--texto);
+      transition: background-color 0.3s, color 0.3s;
     }
+
     th, td {
       padding: 8px;
       text-align: right;
       border: 1px solid #d0e2f2;
     }
+
     th {
       background-color: var(--azul-claro);
       color: var(--azul-oscuro);
+      transition: background-color 0.3s, color 0.3s;
     }
+
     tr:nth-child(even) {
       background-color: rgba(0, 0, 0, 0.05);
+      transition: background-color 0.3s;
     }
+
+    #chartContainer {
+      margin-top: 30px;
+    }
+
     canvas {
       width: 100% !important;
       height: auto !important;
       max-height: 400px;
     }
+
     @media (max-width: 600px) {
       h1 {
         font-size: 1.6rem;
@@ -122,142 +170,253 @@
       table {
         font-size: 0.75rem;
       }
+      #themeToggleBtn {
+        position: static;
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+        border-radius: 5px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <button id="themeToggleBtn">Cambiar tema</button>
+
     <h1>Calculadora de Ahorros</h1>
-    <div style="text-align: right; margin-bottom: 10px;">
-      <button onclick="toggleTheme()">Cambiar tema</button>
-    </div>
+
     <div class="input-group">
-      <label>Ahorro mensual ($): <input type="number" id="monthlySavings" value="300"></label>
-      <label>Edad actual: <input type="number" id="currentAge" value="30"></label>
-      <label>Edad objetivo: <input type="number" id="targetAge" value="65"></label>
-      <label>Rendimiento anual (%): <input type="number" id="annualReturn" value="6"></label>
-      <label>Incremento ahorro anual (%): <input type="number" id="annualIncrease" value="3"></label>
+      <label>Ahorro inicial ($): <input type="number" id="currentSavings"></label>
+      <label>Ahorro mensual ($): <input type="number" id="monthlySavings"></label>
+      <label>Rendimiento anual (%): <input type="number" id="annualReturn"></label>
+      <label>Edad actual: <input type="number" id="currentAge"></label>
+      <label>Edad objetivo: <input type="number" id="targetAge"></label>
     </div>
-    <h3>Metas de gasto</h3>
-    <div class="input-group" id="goalList">
-      <label>Edad meta: <input type="number" class="goalAge" value="40"></label>
-      <label>Monto a gastar ($): <input type="number" class="goalAmount" value="20000"></label>
+
+    <div id="summary" style="display:none;"></div>
+
+    <button id="toggleTableBtn" style="display:none;" onclick="toggleTable()">Mostrar tabla detallada</button>
+
+    <div style="overflow-x:auto;">
+      <table id="resultsTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>Edad</th>
+            <th>Total acumulado</th>
+            <th>Aporte acumulado</th>
+            <th>Interés ganado</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
-    <button onclick="addGoalInput()">Agregar otra meta</button>
-    <div id="summary"></div>
-    <div id="chartContainer"><canvas id="savingsChart"></canvas></div>
-    <table id="resultsTable"></table>
+
+    <div id="chartContainer">
+      <canvas id="savingsChart"></canvas>
+    </div>
   </div>
 
   <script>
-    function toggleTheme() {
-      document.body.classList.toggle('dark-mode');
-      const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
-      localStorage.setItem('theme', theme);
-    }
+    let chart;
 
-    function addGoalInput() {
-      const goalList = document.getElementById('goalList');
-      const labelEdad = document.createElement('label');
-      const inputEdad = document.createElement('input');
-      inputEdad.type = 'number';
-      inputEdad.className = 'goalAge';
-      inputEdad.addEventListener('input', calcularAhorros);
-      labelEdad.innerText = 'Edad meta: ';
-      labelEdad.appendChild(inputEdad);
-      const labelMonto = document.createElement('label');
-      const inputMonto = document.createElement('input');
-      inputMonto.type = 'number';
-      inputMonto.className = 'goalAmount';
-      inputMonto.addEventListener('input', calcularAhorros);
-      labelMonto.innerText = 'Monto a gastar ($): ';
-      labelMonto.appendChild(inputMonto);
-      goalList.appendChild(labelEdad);
-      goalList.appendChild(labelMonto);
-    }
+    const fields = ["currentSavings", "monthlySavings", "annualReturn", "currentAge", "targetAge"];
+    window.onload = () => {
+      // Cargar valores guardados y añadir listeners
+      fields.forEach(id => {
+        const input = document.getElementById(id);
+        const saved = localStorage.getItem(id);
+        if (saved !== null) input.value = saved;
+        input.addEventListener("input", () => {
+          localStorage.setItem(id, input.value);
+          calculate();
+        });
+      });
 
-    function calcularAhorros() {
-      const edadActual = parseInt(document.getElementById('currentAge').value);
-      const edadObjetivo = parseInt(document.getElementById('targetAge').value);
-      const rendimiento = parseFloat(document.getElementById('annualReturn').value) / 100;
-      const incrementoAhorro = parseFloat(document.getElementById('annualIncrease').value) / 100;
-      let ahorroMensual = parseFloat(document.getElementById('monthlySavings').value);
-
-      const metas = Array.from(document.querySelectorAll('.goalAge')).map((input, i) => ({
-        edad: parseInt(input.value),
-        monto: parseFloat(document.querySelectorAll('.goalAmount')[i].value)
-      })).filter(meta => !isNaN(meta.edad) && !isNaN(meta.monto));
-
-      let saldo = 0;
-      let aporteAcumulado = 0;
-      let interesesGanados = 0;
-      const datos = [];
-      const filas = [];
-
-      for (let edad = edadActual; edad <= edadObjetivo; edad++) {
-        let saldoInicioAno = saldo;
-        for (let mes = 0; mes < 12; mes++) {
-          saldo += ahorroMensual;
-          aporteAcumulado += ahorroMensual;
-          saldo *= 1 + (rendimiento / 12);
+      // Cargar tema guardado o preferencia sistema
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        setDarkTheme(true);
+      } else if (savedTheme === 'light') {
+        setDarkTheme(false);
+      } else {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          setDarkTheme(true);
         }
-        const gasto = metas.find(meta => meta.edad === edad);
-        if (gasto) saldo -= gasto.monto;
-        if (edad > edadActual) ahorroMensual *= 1 + incrementoAhorro;
-        interesesGanados = saldo - aporteAcumulado;
-        datos.push({ x: edad, y: parseFloat(saldo.toFixed(2)) });
-        filas.push(`<tr><td>${edad}</td><td>$${saldo.toFixed(2)}</td><td>$${aporteAcumulado.toFixed(2)}</td><td>$${interesesGanados.toFixed(2)}</td></tr>`);
       }
 
-      document.getElementById('summary').innerHTML = `
-        <strong>Monto final:</strong> $${saldo.toLocaleString(undefined, { maximumFractionDigits: 0 })} <br>
-        <strong>Total aportado:</strong> $${aporteAcumulado.toLocaleString(undefined, { maximumFractionDigits: 0 })} <br>
-        <strong>Intereses ganados:</strong> $${interesesGanados.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+      document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-mode');
+        setDarkTheme(isDark);
+      });
+
+      calculate();
+    };
+
+    function setDarkTheme(enable) {
+      const root = document.documentElement;
+      if (enable) {
+        document.body.classList.add('dark-mode');
+        root.style.setProperty('--azul-claro', '#102a43');
+        root.style.setProperty('--azul', '#63ccff');
+        root.style.setProperty('--azul-oscuro', '#bee3f8');
+        root.style.setProperty('--gris-fondo', '#1e293b');
+        root.style.setProperty('--texto', '#f1f5f9');
+        root.style.setProperty('--fondo', '#0f172a');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-mode');
+        root.style.setProperty('--azul-claro', '#e3f2fd');
+        root.style.setProperty('--azul', '#1976d2');
+        root.style.setProperty('--azul-oscuro', '#0d47a1');
+        root.style.setProperty('--gris-fondo', '#f4f8fb');
+        root.style.setProperty('--texto', '#333');
+        root.style.setProperty('--fondo', '#ffffff');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    function toggleTable() {
+      const table = document.getElementById("resultsTable");
+      const btn = document.getElementById("toggleTableBtn");
+      if (table.style.display === "none") {
+        table.style.display = "table";
+        btn.textContent = "Ocultar tabla detallada";
+      } else {
+        table.style.display = "none";
+        btn.textContent = "Mostrar tabla detallada";
+      }
+    }
+
+    function calculate() {
+      const currentSavings = parseFloat(document.getElementById("currentSavings").value) || 0;
+      const monthlySavings = parseFloat(document.getElementById("monthlySavings").value) || 0;
+      const annualReturn = parseFloat(document.getElementById("annualReturn").value) || 0;
+      const currentAge = parseInt(document.getElementById("currentAge").value) || 0;
+      const targetAge = parseInt(document.getElementById("targetAge").value) || 0;
+
+      const years = targetAge - currentAge;
+
+      if (years <= 0) {
+        document.getElementById("summary").style.display = "none";
+        document.getElementById("toggleTableBtn").style.display = "none";
+        document.getElementById("resultsTable").style.display = "none";
+        return;
+      }
+
+      let savings = currentSavings;
+      let totalContribution = currentSavings;
+      const monthlyRate = annualReturn / 100 / 12;
+      const results = [];
+      let ageOfMillion = null;
+
+      for (let i = 0; i < years; i++) {
+        for (let m = 1; m <= 12; m++) {
+          savings += monthlySavings;
+          totalContribution += monthlySavings;
+          savings *= (1 + monthlyRate);
+        }
+
+        const age = currentAge + i + 1;
+        const interestEarned = savings - totalContribution;
+
+        results.push({
+          age,
+          total: parseFloat(savings.toFixed(2)),
+          contribution: parseFloat(totalContribution.toFixed(2)),
+          interest: parseFloat(interestEarned.toFixed(2))
+        });
+
+        if (!ageOfMillion && savings >= 1_000_000) {
+          ageOfMillion = age;
+        }
+      }
+
+      const final = results[results.length - 1];
+      const summary = document.getElementById("summary");
+      summary.style.display = "block";
+      summary.innerHTML = `
+        <strong>Resumen final:</strong><br>
+        📼 <strong>Monto final:</strong> $${final.total.toLocaleString()}<br>
+        💸 <strong>Aporte total:</strong> $${final.contribution.toLocaleString()}<br>
+        📈 <strong>Interés ganado:</strong> $${final.interest.toLocaleString()}<br>
+        ${ageOfMillion ? `💰 <strong>Alcanzás USD 1.000.000 a los ${ageOfMillion} años</strong>` : `💡 No alcanzás el millón en este período`}
       `;
 
+      const tbody = document.querySelector("#resultsTable tbody");
+      tbody.innerHTML = "";
+      results.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.age}</td>
+          <td>$${row.total.toLocaleString()}</td>
+          <td>$${row.contribution.toLocaleString()}</td>
+          <td>$${row.interest.toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById("toggleTableBtn").style.display = "block";
+
+      const labels = results.map(r => `Edad ${r.age}`);
+      const dataTotal = results.map(r => r.total);
+      const dataContribution = results.map(r => r.contribution);
+      const dataInterest = results.map(r => r.interest);
+
       const ctx = document.getElementById('savingsChart').getContext('2d');
-      if (window.myChart) window.myChart.destroy();
-      window.myChart = new Chart(ctx, {
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
         type: 'line',
         data: {
-          datasets: [{
-            label: 'Total acumulado',
-            data: datos,
-            borderColor: '#1976d2',
-            backgroundColor: 'rgba(25, 118, 210, 0.2)',
-            fill: true
-          }]
+          labels: labels,
+          datasets: [
+            {
+              label: 'Total acumulado',
+              data: dataTotal,
+              borderColor: '#1e88e5',
+              backgroundColor: 'rgba(30,136,229,0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Aporte acumulado',
+              data: dataContribution,
+              borderColor: '#64b5f6',
+              borderDash: [5, 5],
+              fill: false,
+              tension: 0.3
+            },
+            {
+              label: 'Interés ganado',
+              data: dataInterest,
+              borderColor: '#0d47a1',
+              backgroundColor: 'rgba(13,71,161,0.1)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
         },
         options: {
-          scales: {
-            x: { type: 'linear', title: { display: true, text: 'Edad' } },
-            y: { beginAtZero: true, title: { display: true, text: 'Saldo acumulado ($)' } }
-          },
+          responsive: true,
           plugins: {
             tooltip: {
               callbacks: {
-                label: ctx => `$${ctx.raw.y.toLocaleString()}`
+                label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => `$${value.toLocaleString()}`
               }
             }
           }
         }
       });
-
-      document.getElementById('resultsTable').innerHTML = `
-        <thead><tr><th>Edad</th><th>Saldo</th><th>Aporte acumulado</th><th>Interés ganado</th></tr></thead>
-        <tbody>${filas.join('')}</tbody>
-      `;
     }
-
-    window.onload = function () {
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') document.body.classList.add('dark-mode');
-      calcularAhorros();
-    };
-
-    document.querySelectorAll('input').forEach(input => {
-      input.addEventListener('input', calcularAhorros);
-    });
   </script>
 </body>
 </html>
