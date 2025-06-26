@@ -2,38 +2,67 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Calculadora de Ahorros con Gráfico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Ahorros</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      padding: 40px;
+      margin: 0;
+      padding: 20px;
       background: #f4f8fb;
       color: #333;
     }
 
     h1 {
-      color: #2c3e50;
+      text-align: center;
+      font-size: 1.8em;
+      color: #0d47a1;
+      margin-bottom: 1em;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
     }
 
     input {
+      flex: 1;
       padding: 10px;
-      margin: 6px 4px;
       font-size: 16px;
       border: 1px solid #ccc;
-      border-radius: 4px;
-      width: 120px;
+      border-radius: 5px;
+      margin-top: 4px;
+    }
+
+    #summary {
+      background: #e3f2fd;
+      padding: 15px;
+      border-left: 5px solid #1976d2;
+      margin: 30px auto;
+      font-size: 16px;
+      max-width: 600px;
     }
 
     #toggleTableBtn {
-      margin-top: 20px;
+      display: block;
+      margin: 10px auto 0;
       background-color: #1976d2;
       color: white;
       border: none;
-      padding: 10px 15px;
+      padding: 10px 20px;
+      font-size: 16px;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 16px;
     }
 
     #toggleTableBtn:hover {
@@ -41,17 +70,17 @@
     }
 
     table {
-      margin-top: 10px;
+      margin: 20px auto;
       border-collapse: collapse;
       width: 100%;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      font-size: 12px; /* fuente más chica */
+      font-size: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
     th, td {
-      padding: 8px 10px;
-      border: 1px solid #d0e2f2;
+      padding: 8px;
       text-align: right;
+      border: 1px solid #d0e2f2;
     }
 
     th {
@@ -64,15 +93,24 @@
     }
 
     #chartContainer {
-      margin-top: 40px;
+      max-width: 100%;
+      overflow-x: auto;
+      margin: 20px auto;
     }
 
-    #summary {
-      margin-top: 20px;
-      font-size: 18px;
-      background-color: #e3f2fd;
-      padding: 15px;
-      border-left: 5px solid #1976d2;
+    canvas {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    @media (max-width: 600px) {
+      label {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      input {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -80,31 +118,35 @@
 
   <h1>Calculadora de Ahorros</h1>
 
-  <label>Ahorro inicial: $<input type="number" id="currentSavings" /></label>
-  <label>Ahorro mensual: $<input type="number" id="monthlySavings" /></label><br>
-  <label>Rendimiento anual (%): <input type="number" id="annualReturn" /></label><br>
-  <label>Edad actual: <input type="number" id="currentAge" /></label>
-  <label>Edad objetivo: <input type="number" id="targetAge" /></label>
+  <div class="input-group">
+    <label>Ahorro inicial ($): <input type="number" id="currentSavings" /></label>
+    <label>Ahorro mensual ($): <input type="number" id="monthlySavings" /></label>
+    <label>Rendimiento anual (%): <input type="number" id="annualReturn" /></label>
+    <label>Edad actual: <input type="number" id="currentAge" /></label>
+    <label>Edad objetivo: <input type="number" id="targetAge" /></label>
+  </div>
 
   <div id="resultsContainer" style="display:none;">
     <div id="summary"></div>
 
     <button id="toggleTableBtn" onclick="toggleTable()">Mostrar tabla detallada</button>
 
-    <table id="resultsTable" style="display:none;">
-      <thead>
-        <tr>
-          <th>Edad</th>
-          <th>Total acumulado</th>
-          <th>Aporte acumulado</th>
-          <th>Interés ganado</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div style="overflow-x: auto;">
+      <table id="resultsTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>Edad</th>
+            <th>Total acumulado</th>
+            <th>Aporte acumulado</th>
+            <th>Interés ganado</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
     <div id="chartContainer">
-      <canvas id="savingsChart" width="600" height="300"></canvas>
+      <canvas id="savingsChart"></canvas>
     </div>
   </div>
 
@@ -243,28 +285,8 @@
           ]
         },
         options: {
+          responsive: true,
           plugins: {
             tooltip: {
               callbacks: {
                 label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: value => `$${value.toLocaleString()}`
-              }
-            }
-          }
-        }
-      });
-    }
-  </script>
-
-</body>
-</html>
-
-
-
