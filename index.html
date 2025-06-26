@@ -11,7 +11,19 @@
       --azul: #1976d2;
       --azul-oscuro: #0d47a1;
       --gris-fondo: #f4f8fb;
-      --fuente-principal: 'Segoe UI', sans-serif;
+      --texto: #333;
+      --fondo: #ffffff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --azul-claro: #102a43;
+        --azul: #63ccff;
+        --azul-oscuro: #bee3f8;
+        --gris-fondo: #1e293b;
+        --texto: #f1f5f9;
+        --fondo: #0f172a;
+      }
     }
 
     * {
@@ -19,11 +31,12 @@
     }
 
     body {
-      font-family: var(--fuente-principal);
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 0;
       background: var(--gris-fondo);
-      color: #333;
+      color: var(--texto);
+      transition: background-color 0.3s, color 0.3s;
     }
 
     .container {
@@ -58,6 +71,9 @@
       border: 1px solid #ccc;
       border-radius: 5px;
       margin-top: 6px;
+      background-color: var(--fondo);
+      color: var(--texto);
+      transition: background-color 0.3s, color 0.3s;
     }
 
     #summary {
@@ -66,6 +82,7 @@
       border-left: 5px solid var(--azul);
       font-size: 1rem;
       margin-top: 30px;
+      transition: background-color 0.3s, border-color 0.3s;
     }
 
     button {
@@ -78,10 +95,20 @@
       font-size: 1rem;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
 
     button:hover {
-      background-color: #125ab5;
+      opacity: 0.9;
+    }
+
+    #themeToggleBtn {
+      width: auto;
+      padding: 8px 16px;
+      margin-bottom: 20px;
+      float: right;
+      background-color: var(--azul-oscuro);
+      border-radius: 4px;
     }
 
     table {
@@ -90,6 +117,9 @@
       width: 100%;
       font-size: 0.85rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      background: var(--fondo);
+      color: var(--texto);
+      transition: background-color 0.3s, color 0.3s;
     }
 
     th, td {
@@ -101,10 +131,12 @@
     th {
       background-color: var(--azul-claro);
       color: var(--azul-oscuro);
+      transition: background-color 0.3s, color 0.3s;
     }
 
     tr:nth-child(even) {
-      background-color: #f1f8ff;
+      background-color: rgba(0, 0, 0, 0.05);
+      transition: background-color 0.3s;
     }
 
     #chartContainer {
@@ -133,11 +165,18 @@
       table {
         font-size: 0.75rem;
       }
+      #themeToggleBtn {
+        float: none;
+        width: 100%;
+        margin-bottom: 10px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <button id="themeToggleBtn">Cambiar tema</button>
+
     <h1>Calculadora de Ahorros</h1>
 
     <div class="input-group">
@@ -174,8 +213,9 @@
   <script>
     let chart;
 
+    const fields = ["currentSavings", "monthlySavings", "annualReturn", "currentAge", "targetAge"];
     window.onload = () => {
-      const fields = ["currentSavings", "monthlySavings", "annualReturn", "currentAge", "targetAge"];
+      // Cargar valores guardados y añadir listeners
       fields.forEach(id => {
         const input = document.getElementById(id);
         const saved = localStorage.getItem(id);
@@ -185,8 +225,50 @@
           calculate();
         });
       });
+
+      // Cargar tema guardado o preferencia sistema
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        setDarkTheme(true);
+      } else if (savedTheme === 'light') {
+        setDarkTheme(false);
+      } else {
+        // Si no hay guardado, activar modo oscuro si sistema lo prefiere
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          setDarkTheme(true);
+        }
+      }
+
+      document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-mode');
+        setDarkTheme(isDark);
+      });
+
       calculate();
     };
+
+    function setDarkTheme(enable) {
+      const root = document.documentElement;
+      if (enable) {
+        document.body.classList.add('dark-mode');
+        root.style.setProperty('--azul-claro', '#102a43');
+        root.style.setProperty('--azul', '#63ccff');
+        root.style.setProperty('--azul-oscuro', '#bee3f8');
+        root.style.setProperty('--gris-fondo', '#1e293b');
+        root.style.setProperty('--texto', '#f1f5f9');
+        root.style.setProperty('--fondo', '#0f172a');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-mode');
+        root.style.setProperty('--azul-claro', '#e3f2fd');
+        root.style.setProperty('--azul', '#1976d2');
+        root.style.setProperty('--azul-oscuro', '#0d47a1');
+        root.style.setProperty('--gris-fondo', '#f4f8fb');
+        root.style.setProperty('--texto', '#333');
+        root.style.setProperty('--fondo', '#ffffff');
+        localStorage.setItem('theme', 'light');
+      }
+    }
 
     function toggleTable() {
       const table = document.getElementById("resultsTable");
@@ -249,7 +331,7 @@
       summary.style.display = "block";
       summary.innerHTML = `
         <strong>Resumen final:</strong><br>
-        💼 <strong>Monto final:</strong> $${final.total.toLocaleString()}<br>
+        📼 <strong>Monto final:</strong> $${final.total.toLocaleString()}<br>
         💸 <strong>Aporte total:</strong> $${final.contribution.toLocaleString()}<br>
         📈 <strong>Interés ganado:</strong> $${final.interest.toLocaleString()}<br>
         ${ageOfMillion ? `💰 <strong>Alcanzás USD 1.000.000 a los ${ageOfMillion} años</strong>` : `💡 No alcanzás el millón en este período`}
