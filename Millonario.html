@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculadora de Ahorros con Gráfico</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 40px;
+      background: #f4f8fb;
+      color: #333;
+    }
+
+    h1 {
+      color: #2c3e50;
+    }
+
+    input {
+      padding: 10px;
+      margin: 6px 4px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 120px;
+    }
+
+    #toggleTableBtn {
+      margin-top: 20px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #toggleTableBtn:hover {
+      background-color: #1565c0;
+    }
+
+    table {
+      margin-top: 10px;
+      border-collapse: collapse;
+      width: 100%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 12px; /* fuente más chica */
+    }
+
+    th, td {
+      padding: 8px 10px;
+      border: 1px solid #d0e2f2;
+      text-align: right;
+    }
+
+    th {
+      background-color: #e3f2fd;
+      color: #0d47a1;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f1f8ff;
+    }
+
+    #chartContainer {
+      margin-top: 40px;
+    }
+
+    #summary {
+      margin-top: 20px;
+      font-size: 18px;
+      background-color: #e3f2fd;
+      padding: 15px;
+      border-left: 5px solid #1976d2;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Calculadora de Ahorros</h1>
+
+  <label>Ahorro inicial: $<input type="number" id="currentSavings" /></label>
+  <label>Ahorro mensual: $<input type="number" id="monthlySavings" /></label><br>
+  <label>Rendimiento anual (%): <input type="number" id="annualReturn" /></label><br>
+  <label>Edad actual: <input type="number" id="currentAge" /></label>
+  <label>Edad objetivo: <input type="number" id="targetAge" /></label>
+
+  <div id="resultsContainer" style="display:none;">
+    <div id="summary"></div>
+
+    <button id="toggleTableBtn" onclick="toggleTable()">Mostrar tabla detallada</button>
+
+    <table id="resultsTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>Edad</th>
+          <th>Total acumulado</th>
+          <th>Aporte acumulado</th>
+          <th>Interés ganado</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="chartContainer">
+      <canvas id="savingsChart" width="600" height="300"></canvas>
+    </div>
+  </div>
+
+  <script>
+    let chart;
+
+    window.onload = () => {
+      const fields = ["currentSavings", "monthlySavings", "annualReturn", "currentAge", "targetAge"];
+      fields.forEach(id => {
+        const input = document.getElementById(id);
+        const saved = localStorage.getItem(id);
+        if (saved !== null) input.value = saved;
+        input.addEventListener("input", () => {
+          localStorage.setItem(id, input.value);
+          calculate();
+        });
+      });
+      calculate();
+    };
+
+    function toggleTable() {
+      const table = document.getElementById("resultsTable");
+      const btn = document.getElementById("toggleTableBtn");
+      if (table.style.display === "none") {
+        table.style.display = "table";
+        btn.textContent = "Ocultar tabla detallada";
+      } else {
+        table.style.display = "none";
+        btn.textContent = "Mostrar tabla detallada";
+      }
+    }
+
+    function calculate() {
+      const currentSavings = parseFloat(document.getElementById("currentSavings").value) || 0;
+      const monthlySavings = parseFloat(document.getElementById("monthlySavings").value) || 0;
+      const annualReturn = parseFloat(document.getElementById("annualReturn").value) || 0;
+      const currentAge = parseInt(document.getElementById("currentAge").value) || 0;
+      const targetAge = parseInt(document.getElementById("targetAge").value) || 0;
+
+      const years = targetAge - currentAge;
+
+      if (years <= 0 || isNaN(currentSavings) || isNaN(monthlySavings) || isNaN(annualReturn)) {
+        document.getElementById("resultsContainer").style.display = "none";
+        return;
+      }
+
+      let savings = currentSavings;
+      let totalContribution = currentSavings;
+      const monthlyRate = annualReturn / 100 / 12;
+      const results = [];
+      let ageOfMillion = null;
+
+      for (let i = 0; i < years; i++) {
+        for (let m = 1; m <= 12; m++) {
+          savings += monthlySavings;
+          totalContribution += monthlySavings;
+          savings *= (1 + monthlyRate);
+        }
+
+        const age = currentAge + i + 1;
+        const interestEarned = savings - totalContribution;
+
+        results.push({
+          age,
+          total: parseFloat(savings.toFixed(2)),
+          contribution: parseFloat(totalContribution.toFixed(2)),
+          interest: parseFloat(interestEarned.toFixed(2))
+        });
+
+        if (!ageOfMillion && savings >= 1_000_000) {
+          ageOfMillion = age;
+        }
+      }
+
+      document.getElementById("resultsContainer").style.display = "block";
+
+      const final = results[results.length - 1];
+      document.getElementById("summary").innerHTML = `
+        <strong>Resumen final:</strong><br>
+        💼 <strong>Monto final:</strong> $${final.total.toLocaleString()}<br>
+        💸 <strong>Aporte total:</strong> $${final.contribution.toLocaleString()}<br>
+        📈 <strong>Interés ganado:</strong> $${final.interest.toLocaleString()}<br>
+        ${ageOfMillion ? `💰 <strong>Alcanzás USD 1.000.000 a los ${ageOfMillion} años</strong>` : `💡 No alcanzás el millón en este período`}
+      `;
+
+      const tbody = document.querySelector("#resultsTable tbody");
+      tbody.innerHTML = "";
+      results.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.age}</td>
+          <td>$${row.total.toLocaleString()}</td>
+          <td>$${row.contribution.toLocaleString()}</td>
+          <td>$${row.interest.toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const labels = results.map(r => `Edad ${r.age}`);
+      const dataTotal = results.map(r => r.total);
+      const dataContribution = results.map(r => r.contribution);
+      const dataInterest = results.map(r => r.interest);
+
+      const ctx = document.getElementById('savingsChart').getContext('2d');
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Total acumulado',
+              data: dataTotal,
+              borderColor: '#1e88e5',
+              backgroundColor: 'rgba(30,136,229,0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Aporte acumulado',
+              data: dataContribution,
+              borderColor: '#64b5f6',
+              borderDash: [5, 5],
+              fill: false,
+              tension: 0.3
+            },
+            {
+              label: 'Interés ganado',
+              data: dataInterest,
+              borderColor: '#0d47a1',
+              backgroundColor: 'rgba(13,71,161,0.1)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => `$${value.toLocaleString()}`
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
+
+
+
