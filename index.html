@@ -192,6 +192,11 @@
       <label>Rendimiento anual (%): <input type="number" id="annualReturn"></label>
       <label>Edad actual: <input type="number" id="currentAge"></label>
       <label>Edad objetivo: <input type="number" id="targetAge"></label>
+      <label>Inflación anual (%): <input type="number" id="inflationRate" /></label>
+      <label>Crecimiento anual del aporte (%): <input type="number" id="contributionIncrease" /></label>
+      <label>Edad pico del aporte: <input type="number" id="peakAge" /></label>
+      <label>Reducción anual del aporte (%): <input type="number" id="contributionDecrease" /></label>
+
     </div>
 
     <div id="summary" style="display:none;"></div>
@@ -289,134 +294,160 @@
     }
 
     function calculate() {
-      const currentSavings = parseFloat(document.getElementById("currentSavings").value) || 0;
-      const monthlySavings = parseFloat(document.getElementById("monthlySavings").value) || 0;
-      const annualReturn = parseFloat(document.getElementById("annualReturn").value) || 0;
-      const currentAge = parseInt(document.getElementById("currentAge").value) || 0;
-      const targetAge = parseInt(document.getElementById("targetAge").value) || 0;
+   function calculate() {
+  const currentSavings = parseFloat(document.getElementById("currentSavings").value) || 0;
+  const baseMonthlySavings = parseFloat(document.getElementById("monthlySavings").value) || 0;
+  const annualReturn = parseFloat(document.getElementById("annualReturn").value) || 0;
+  const currentAge = parseInt(document.getElementById("currentAge").value) || 0;
+  const targetAge = parseInt(document.getElementById("targetAge").value) || 0;
 
-      const years = targetAge - currentAge;
+  const inflationRate = parseFloat(document.getElementById("inflationRate").value) || 0;
+  const contributionIncrease = parseFloat(document.getElementById("contributionIncrease").value) || 0;
+  const peakAge = parseInt(document.getElementById("peakAge").value) || targetAge;
+  const contributionDecrease = parseFloat(document.getElementById("contributionDecrease").value) || 0;
 
-      if (years <= 0) {
-        document.getElementById("summary").style.display = "none";
-        document.getElementById("toggleTableBtn").style.display = "none";
-        document.getElementById("resultsTable").style.display = "none";
-        return;
-      }
+  const years = targetAge - currentAge;
+  if (years <= 0) {
+    document.getElementById("summary").style.display = "none";
+    document.getElementById("toggleTableBtn").style.display = "none";
+    document.getElementById("resultsTable").style.display = "none";
+    return;
+  }
 
-      let savings = currentSavings;
-      let totalContribution = currentSavings;
-      const monthlyRate = annualReturn / 100 / 12;
-      const results = [];
-      let ageOfMillion = null;
+  let savings = currentSavings;
+  let totalContribution = currentSavings;
+  const monthlyRate = annualReturn / 100 / 12;
+  const monthlyInflationRate = inflationRate / 100 / 12;
+  const results = [];
+  let ageOfMillion = null;
 
-      for (let i = 0; i < years; i++) {
-        for (let m = 1; m <= 12; m++) {
-          savings += monthlySavings;
-          totalContribution += monthlySavings;
-          savings *= (1 + monthlyRate);
-        }
+  let monthlySavings = baseMonthlySavings;
 
-        const age = currentAge + i + 1;
-        const interestEarned = savings - totalContribution;
+  for (let i = 0; i < years; i++) {
+    const age = currentAge + i + 1;
 
-        results.push({
-          age,
-          total: parseFloat(savings.toFixed(2)),
-          contribution: parseFloat(totalContribution.toFixed(2)),
-          interest: parseFloat(interestEarned.toFixed(2))
-        });
+    for (let m = 1; m <= 12; m++) {
+      savings += monthlySavings;
+      totalContribution += monthlySavings;
+      savings *= (1 + monthlyRate);
+    }
 
-        if (!ageOfMillion && savings >= 1_000_000) {
-          ageOfMillion = age;
-        }
-      }
+    // Calcular monto ajustado por inflación
+    const inflationMultiplier = Math.pow(1 + monthlyInflationRate, (i + 1) * 12);
+    const adjustedTotal = savings / inflationMultiplier;
 
-      const final = results[results.length - 1];
-      const summary = document.getElementById("summary");
-      summary.style.display = "block";
-      summary.innerHTML = `
-        <strong>Resumen final:</strong><br>
-        📼 <strong>Monto final:</strong> $${final.total.toLocaleString()}<br>
-        💸 <strong>Aporte total:</strong> $${final.contribution.toLocaleString()}<br>
-        📈 <strong>Interés ganado:</strong> $${final.interest.toLocaleString()}<br>
-        ${ageOfMillion ? `💰 <strong>Alcanzás USD 1.000.000 a los ${ageOfMillion} años</strong>` : `💡 No alcanzás el millón en este período`}
-      `;
+    results.push({
+      age,
+      total: parseFloat(savings.toFixed(2)),
+      contribution: parseFloat(totalContribution.toFixed(2)),
+      interest: parseFloat((savings - totalContribution).toFixed(2)),
+      adjusted: parseFloat(adjustedTotal.toFixed(2))
+    });
 
-      const tbody = document.querySelector("#resultsTable tbody");
-      tbody.innerHTML = "";
-      results.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row.age}</td>
-          <td>$${row.total.toLocaleString()}</td>
-          <td>$${row.contribution.toLocaleString()}</td>
-          <td>$${row.interest.toLocaleString()}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+    if (!ageOfMillion && savings >= 1_000_000) {
+      ageOfMillion = age;
+    }
 
-      document.getElementById("toggleTableBtn").style.display = "block";
+    // Actualizar aporte mensual para el próximo año
+    if (age < peakAge) {
+      monthlySavings *= 1 + (contributionIncrease / 100);
+    } else {
+      monthlySavings *= 1 - (contributionDecrease / 100);
+    }
+  }
 
-      const labels = results.map(r => `Edad ${r.age}`);
-      const dataTotal = results.map(r => r.total);
-      const dataContribution = results.map(r => r.contribution);
-      const dataInterest = results.map(r => r.interest);
+  const final = results[results.length - 1];
+  const summary = document.getElementById("summary");
+  summary.style.display = "block";
+  summary.innerHTML = `
+    <strong>Resumen final:</strong><br>
+    📼 <strong>Monto final:</strong> $${final.total.toLocaleString()}<br>
+    💸 <strong>Aporte total:</strong> $${final.contribution.toLocaleString()}<br>
+    📈 <strong>Interés ganado:</strong> $${final.interest.toLocaleString()}<br>
+    🧮 <strong>Monto final ajustado por inflación:</strong> $${final.adjusted.toLocaleString()}<br>
+    ${ageOfMillion ? `💰 <strong>Alcanzás USD 1.000.000 a los ${ageOfMillion} años</strong>` : `💡 No alcanzás el millón en este período`}
+  `;
 
-      const ctx = document.getElementById('savingsChart').getContext('2d');
-      if (chart) chart.destroy();
+  const tbody = document.querySelector("#resultsTable tbody");
+  tbody.innerHTML = "";
+  results.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.age}</td>
+      <td>$${row.total.toLocaleString()}</td>
+      <td>$${row.contribution.toLocaleString()}</td>
+      <td>$${row.interest.toLocaleString()}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 
-      chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Total acumulado',
-              data: dataTotal,
-              borderColor: '#1e88e5',
-              backgroundColor: 'rgba(30,136,229,0.1)',
-              fill: true,
-              tension: 0.3
-            },
-            {
-              label: 'Aporte acumulado',
-              data: dataContribution,
-              borderColor: '#64b5f6',
-              borderDash: [5, 5],
-              fill: false,
-              tension: 0.3
-            },
-            {
-              label: 'Interés ganado',
-              data: dataInterest,
-              borderColor: '#0d47a1',
-              backgroundColor: 'rgba(13,71,161,0.1)',
-              fill: true,
-              tension: 0.3
-            }
-          ]
+  document.getElementById("toggleTableBtn").style.display = "block";
+
+  const labels = results.map(r => `Edad ${r.age}`);
+  const dataTotal = results.map(r => r.total);
+  const dataContribution = results.map(r => r.contribution);
+  const dataInterest = results.map(r => r.interest);
+  const dataAdjusted = results.map(r => r.adjusted);
+
+  const ctx = document.getElementById('savingsChart').getContext('2d');
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Total acumulado',
+          data: dataTotal,
+          borderColor: '#1e88e5',
+          backgroundColor: 'rgba(30,136,229,0.1)',
+          fill: true,
+          tension: 0.3
         },
-        options: {
-          responsive: true,
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: value => `$${value.toLocaleString()}`
-              }
-            }
+        {
+          label: 'Aporte acumulado',
+          data: dataContribution,
+          borderColor: '#64b5f6',
+          borderDash: [5, 5],
+          fill: false,
+          tension: 0.3
+        },
+        {
+          label: 'Interés ganado',
+          data: dataInterest,
+          borderColor: '#0d47a1',
+          backgroundColor: 'rgba(13,71,161,0.1)',
+          fill: true,
+          tension: 0.3
+        },
+        {
+          label: 'Total ajustado por inflación',
+          data: dataAdjusted,
+          borderColor: '#ff9800',
+          backgroundColor: 'rgba(255,152,0,0.1)',
+          fill: true,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
           }
         }
-      });
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: value => `$${value.toLocaleString()}`
+          }
+        }
+      }
     }
-  </script>
-</body>
-</html>
+  });
+}
