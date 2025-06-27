@@ -6,402 +6,237 @@
   <title>Calculadora de Ahorros</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root {
-      --azul-claro: #e3f2fd;
-      --azul: #1976d2;
-      --azul-oscuro: #0d47a1;
-      --gris-fondo: #f4f8fb;
-      --texto: #333;
-      --fondo: #ffffff;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --azul-claro: #102a43;
-        --azul: #63ccff;
-        --azul-oscuro: #bee3f8;
-        --gris-fondo: #1e293b;
-        --texto: #f1f5f9;
-        --fondo: #0f172a;
-      }
-    }
-
-    * { box-sizing: border-box; }
-
     body {
       font-family: 'Segoe UI', sans-serif;
+      background: #f4f8fb;
+      color: #333;
       margin: 0;
-      padding: 0;
-      background: var(--gris-fondo);
-      color: var(--texto);
-      transition: background-color 0.3s, color 0.3s;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
       padding: 20px;
-      position: relative;
     }
-
+    .container {
+      max-width: 1000px;
+      margin: auto;
+    }
     h1 {
       text-align: center;
-      font-size: 2.2rem;
-      color: var(--azul-oscuro);
-      margin-bottom: 1.5rem;
+      color: #0d47a1;
     }
-
     .input-group {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 16px;
+      margin-bottom: 20px;
     }
-
     label {
-      font-size: 0.95rem;
-      font-weight: 600;
       display: flex;
       flex-direction: column;
+      font-weight: bold;
     }
-
     input[type="number"] {
-      padding: 10px;
+      padding: 8px;
       font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      margin-top: 6px;
-      background-color: var(--fondo);
-      color: var(--texto);
-      transition: background-color 0.3s, color 0.3s;
     }
-
-    #summary {
-      background: var(--azul-claro);
-      padding: 15px;
-      border-left: 5px solid var(--azul);
-      font-size: 1rem;
-      margin-top: 30px;
-      transition: background-color 0.3s, border-color 0.3s;
+    .event-group {
+      margin-bottom: 10px;
     }
-
-    button {
-      background-color: var(--azul);
-      color: white;
-      border: none;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
+    canvas {
+      max-width: 100%;
+      height: auto;
     }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    #themeToggleBtn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: auto;
-      padding: 8px 16px;
-      background-color: var(--azul-oscuro);
-      border-radius: 4px;
-    }
-
-    #toggleTableBtn {
-      width: 100%;
-      margin-top: 20px;
-    }
-
     table {
+      width: 100%;
       margin-top: 20px;
       border-collapse: collapse;
-      width: 100%;
-      font-size: 0.85rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      background: var(--fondo);
-      color: var(--texto);
-      transition: background-color 0.3s, color 0.3s;
+      font-size: 0.9rem;
     }
-
     th, td {
+      border: 1px solid #ccc;
       padding: 8px;
       text-align: right;
-      border: 1px solid #d0e2f2;
     }
-
     th {
-      background-color: var(--azul-claro);
-      color: var(--azul-oscuro);
-      transition: background-color 0.3s, color 0.3s;
+      background-color: #e3f2fd;
+      color: #0d47a1;
     }
-
     tr:nth-child(even) {
-      background-color: rgba(0, 0, 0, 0.05);
-      transition: background-color 0.3s;
+      background-color: #f9f9f9;
     }
-
-    #chartContainer {
-      margin-top: 30px;
-    }
-
-    canvas {
-      width: 100% !important;
-      height: auto !important;
-      max-height: 400px;
-    }
-
-    @media (max-width: 600px) {
-      h1 { font-size: 1.6rem; }
-      label { font-size: 0.9rem; }
-      input[type="number"] { font-size: 0.95rem; }
-      #summary { font-size: 0.95rem; }
-      table { font-size: 0.75rem; }
-      #themeToggleBtn {
-        position: static;
-        display: block;
-        width: 100%;
-        margin-bottom: 10px;
-        border-radius: 5px;
-      }
+    #toggleTableBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <button id="themeToggleBtn">Cambiar tema</button>
-
-    <h1>Calculadora de Ahorros</h1>
+    <h1>Calculadora de Ahorros con Tramos</h1>
 
     <div class="input-group">
-      <label>Ahorro inicial ($): <input type="number" id="currentSavings"></label>
-      <label>Ahorro mensual ($): <input type="number" id="monthlySavings"></label>
-      <label>Rendimiento anual (%): <input type="number" id="annualReturn"></label>
-      <label>Edad actual: <input type="number" id="currentAge"></label>
-      <label>Edad objetivo: <input type="number" id="targetAge"></label>
+      <label>Edad de inicio:
+        <input type="number" id="startAge">
+      </label>
+      <label>Edad cambio 1:
+        <input type="number" id="age1">
+      </label>
+      <label>Aporte tramo 1 ($/mes):
+        <input type="number" id="contrib1">
+      </label>
 
-      <!-- NUEVOS CAMPOS -->
-      <label>Inflación anual (%): <input type="number" id="inflationRate"></label>
-      <label>Crecimiento anual del aporte (%): <input type="number" id="contributionIncrease"></label>
-      <label>Edad pico del aporte: <input type="number" id="peakAge"></label>
-      <label>Reducción anual del aporte (%): <input type="number" id="contributionDecrease"></label>
+      <label>Edad cambio 2:
+        <input type="number" id="age2">
+      </label>
+      <label>Aporte tramo 2 ($/mes):
+        <input type="number" id="contrib2">
+      </label>
+
+      <label>Edad final:
+        <input type="number" id="endAge">
+      </label>
+      <label>Aporte tramo 3 ($/mes):
+        <input type="number" id="contrib3">
+      </label>
+
+      <label>Ahorro inicial ($):
+        <input type="number" id="initialSavings">
+      </label>
+      <label>Rendimiento anual (%):
+        <input type="number" id="annualReturn">
+      </label>
     </div>
 
-    <div id="summary" style="display:none;"></div>
-
-    <button id="toggleTableBtn" style="display:none;" onclick="toggleTable()">Mostrar tabla detallada</button>
-
-    <div style="overflow-x:auto;">
-      <table id="resultsTable" style="display:none;">
-        <thead>
-          <tr>
-            <th>Edad</th>
-            <th>Total acumulado</th>
-            <th>Aporte acumulado</th>
-            <th>Interés ganado</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <h3>Eventos únicos (gastos o ingresos puntuales)</h3>
+    <div class="input-group">
+      <label>Edad evento 1:
+        <input type="number" id="eventAge1">
+      </label>
+      <label>Monto evento 1 ($):
+        <input type="number" id="eventAmount1">
+      </label>
+      <label>Edad evento 2:
+        <input type="number" id="eventAge2">
+      </label>
+      <label>Monto evento 2 ($):
+        <input type="number" id="eventAmount2">
+      </label>
+      <label>Edad evento 3:
+        <input type="number" id="eventAge3">
+      </label>
+      <label>Monto evento 3 ($):
+        <input type="number" id="eventAmount3">
+      </label>
     </div>
 
-    <div id="chartContainer">
-      <canvas id="savingsChart"></canvas>
-    </div>
+    <button onclick="calculateSavings()">Calcular</button>
+    <div id="summary"></div>
+    <canvas id="savingsChart"></canvas>
+    <button id="toggleTableBtn" onclick="toggleTable()" style="display:none;">Mostrar tabla detallada</button>
+    <div id="tableContainer" style="display:none;"></div>
   </div>
 
   <script>
     let chart;
-
-    const fields = ["currentSavings", "monthlySavings", "annualReturn", "currentAge", "targetAge", "inflationRate", "contributionIncrease", "peakAge", "contributionDecrease"];
-    window.onload = () => {
-      fields.forEach(id => {
-        const input = document.getElementById(id);
-        const saved = localStorage.getItem(id);
-        if (saved !== null) input.value = saved;
-        input.addEventListener("input", () => {
-          localStorage.setItem(id, input.value);
-          calculate();
-        });
-      });
-
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') setDarkTheme(true);
-      else if (savedTheme === 'light') setDarkTheme(false);
-      else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setDarkTheme(true);
-
-      document.getElementById('themeToggleBtn').addEventListener('click', () => {
-        const isDark = document.body.classList.toggle('dark-mode');
-        setDarkTheme(isDark);
-      });
-
-      calculate();
-    };
-
-    function setDarkTheme(enable) {
-      const root = document.documentElement;
-      if (enable) {
-        document.body.classList.add('dark-mode');
-        root.style.setProperty('--azul-claro', '#102a43');
-        root.style.setProperty('--azul', '#63ccff');
-        root.style.setProperty('--azul-oscuro', '#bee3f8');
-        root.style.setProperty('--gris-fondo', '#1e293b');
-        root.style.setProperty('--texto', '#f1f5f9');
-        root.style.setProperty('--fondo', '#0f172a');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.body.classList.remove('dark-mode');
-        root.style.setProperty('--azul-claro', '#e3f2fd');
-        root.style.setProperty('--azul', '#1976d2');
-        root.style.setProperty('--azul-oscuro', '#0d47a1');
-        root.style.setProperty('--gris-fondo', '#f4f8fb');
-        root.style.setProperty('--texto', '#333');
-        root.style.setProperty('--fondo', '#ffffff');
-        localStorage.setItem('theme', 'light');
-      }
-    }
-
     function toggleTable() {
-      const table = document.getElementById("resultsTable");
+      const container = document.getElementById("tableContainer");
       const btn = document.getElementById("toggleTableBtn");
-      if (table.style.display === "none") {
-        table.style.display = "table";
+      if (container.style.display === "none") {
+        container.style.display = "block";
         btn.textContent = "Ocultar tabla detallada";
       } else {
-        table.style.display = "none";
+        container.style.display = "none";
         btn.textContent = "Mostrar tabla detallada";
       }
     }
 
-    function calculate() {
-      const currentSavings = parseFloat(document.getElementById("currentSavings").value) || 0;
-      const baseMonthlySavings = parseFloat(document.getElementById("monthlySavings").value) || 0;
-      const annualReturn = parseFloat(document.getElementById("annualReturn").value) || 0;
-      const currentAge = parseInt(document.getElementById("currentAge").value) || 0;
-      const targetAge = parseInt(document.getElementById("targetAge").value) || 0;
+    function calculateSavings() {
+      const startAge = parseInt(document.getElementById('startAge').value);
+      const age1 = parseInt(document.getElementById('age1').value);
+      const age2 = parseInt(document.getElementById('age2').value);
+      const endAge = parseInt(document.getElementById('endAge').value);
 
-      const inflationRate = parseFloat(document.getElementById("inflationRate").value) || 0;
-      const contributionIncrease = parseFloat(document.getElementById("contributionIncrease").value) || 0;
-      const peakAge = parseInt(document.getElementById("peakAge").value) || targetAge;
-      const contributionDecrease = parseFloat(document.getElementById("contributionDecrease").value) || 0;
+      const contrib1 = parseFloat(document.getElementById('contrib1').value);
+      const contrib2 = parseFloat(document.getElementById('contrib2').value);
+      const contrib3 = parseFloat(document.getElementById('contrib3').value);
+      const initialSavings = parseFloat(document.getElementById('initialSavings').value);
+      const annualReturn = parseFloat(document.getElementById('annualReturn').value);
 
-      const years = targetAge - currentAge;
-      if (years <= 0) {
-        document.getElementById("summary").style.display = "none";
-        document.getElementById("toggleTableBtn").style.display = "none";
-        document.getElementById("resultsTable").style.display = "none";
-        return;
-      }
+      const events = [
+        { age: parseInt(document.getElementById('eventAge1').value), amount: parseFloat(document.getElementById('eventAmount1').value) },
+        { age: parseInt(document.getElementById('eventAge2').value), amount: parseFloat(document.getElementById('eventAmount2').value) },
+        { age: parseInt(document.getElementById('eventAge3').value), amount: parseFloat(document.getElementById('eventAmount3').value) }
+      ].filter(e => !isNaN(e.age) && !isNaN(e.amount));
 
-      let savings = currentSavings;
-      let totalContribution = currentSavings;
       const monthlyRate = annualReturn / 100 / 12;
-      const monthlyInflationRate = inflationRate / 100 / 12;
-      const results = [];
-      let ageOfMillion = null;
-      let monthlySavings = baseMonthlySavings;
+      let savings = initialSavings;
+      let results = [];
+      let totalContribution = initialSavings;
 
-      for (let i = 0; i < years; i++) {
-        const age = currentAge + i + 1;
+      for (let age = startAge + 1; age <= endAge; age++) {
+        let monthlyContribution = 0;
+        if (age <= age1) monthlyContribution = contrib1;
+        else if (age <= age2) monthlyContribution = contrib2;
+        else monthlyContribution = contrib3;
 
-        for (let m = 1; m <= 12; m++) {
-          savings += monthlySavings;
-          totalContribution += monthlySavings;
+        for (let m = 0; m < 12; m++) {
+          savings += monthlyContribution;
+          totalContribution += monthlyContribution;
           savings *= (1 + monthlyRate);
         }
 
-        const inflationMultiplier = Math.pow(1 + monthlyInflationRate, (i + 1) * 12);
-        const adjustedTotal = savings / inflationMultiplier;
+        const event = events.find(e => e.age === age);
+        if (event) savings += event.amount;
 
         results.push({
           age,
-          total: parseFloat(savings.toFixed(2)),
-          contribution: parseFloat(totalContribution.toFixed(2)),
-          interest: parseFloat((savings - totalContribution).toFixed(2)),
-          adjusted: parseFloat(adjustedTotal.toFixed(2))
+          total: savings,
+          contribution: totalContribution,
+          interest: savings - totalContribution
         });
-
-        if (!ageOfMillion && savings >= 1_000_000) ageOfMillion = age;
-
-        // actualizar aporte mensual para el año siguiente
-        if (age < peakAge) {
-          monthlySavings *= 1 + (contributionIncrease / 100);
-        } else {
-          monthlySavings *= 1 - (contributionDecrease / 100);
-        }
       }
 
-      const final = results[results.length - 1];
       const summary = document.getElementById("summary");
-      summary.style.display = "block";
+      const final = results[results.length - 1];
       summary.innerHTML = `
-        <strong>Resumen final:</strong><br>
-        📼 <strong>Monto final:</strong> $${final.total.toLocaleString()}<br>
-        💸 <strong>Aporte total:</strong> $${final.contribution.toLocaleString()}<br>
-        📈 <strong>Interés ganado:</strong> $${final.interest.toLocaleString()}<br>
-        🧮 <strong>Monto final ajustado por inflación:</strong> $${final.adjusted.toLocaleString()}<br>
-        ${ageOfMillion ? `💰 <strong>Alcanzás USD 1.000.000 a los ${ageOfMillion} años</strong>` : `💡 No alcanzás el millón en este período`}
+        <h3>Resumen:</h3>
+        <p>Edad final: ${final.age}</p>
+        <p>Total acumulado: $${final.total.toFixed(2)}</p>
+        <p>Total aportado: $${final.contribution.toFixed(2)}</p>
+        <p>Interés ganado: $${final.interest.toFixed(2)}</p>
       `;
 
-      const tbody = document.querySelector("#resultsTable tbody");
-      tbody.innerHTML = "";
-      results.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row.age}</td>
-          <td>$${row.total.toLocaleString()}</td>
-          <td>$${row.contribution.toLocaleString()}</td>
-          <td>$${row.interest.toLocaleString()}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById("toggleTableBtn").style.display = "block";
-
-      const labels = results.map(r => `Edad ${r.age}`);
-      const dataTotal = results.map(r => r.total);
-      const dataContribution = results.map(r => r.contribution);
-      const dataInterest = results.map(r => r.interest);
-      const dataAdjusted = results.map(r => r.adjusted);
-
-      const ctx = document.getElementById('savingsChart').getContext('2d');
+      const ctx = document.getElementById("savingsChart").getContext("2d");
       if (chart) chart.destroy();
 
       chart = new Chart(ctx, {
-        type: 'line',
+        type: "line",
         data: {
-          labels,
+          labels: results.map(r => `Edad ${r.age}`),
           datasets: [
             {
-              label: 'Total acumulado',
-              data: dataTotal,
-              borderColor: '#1e88e5',
-              backgroundColor: 'rgba(30,136,229,0.1)',
+              label: "Total acumulado",
+              data: results.map(r => r.total),
+              borderColor: "#1976d2",
+              backgroundColor: "rgba(25, 118, 210, 0.2)",
               fill: true,
               tension: 0.3
             },
             {
-              label: 'Aporte acumulado',
-              data: dataContribution,
-              borderColor: '#64b5f6',
+              label: "Aporte acumulado",
+              data: results.map(r => r.contribution),
+              borderColor: "#64b5f6",
               borderDash: [5, 5],
               fill: false,
               tension: 0.3
             },
             {
-              label: 'Interés ganado',
-              data: dataInterest,
-              borderColor: '#0d47a1',
-              backgroundColor: 'rgba(13,71,161,0.1)',
-              fill: true,
-              tension: 0.3
-            },
-            {
-              label: 'Total ajustado por inflación',
-              data: dataAdjusted,
-              borderColor: '#ff9800',
-              backgroundColor: 'rgba(255,152,0,0.1)',
+              label: "Interés ganado",
+              data: results.map(r => r.interest),
+              borderColor: "#0d47a1",
+              backgroundColor: "rgba(13, 71, 161, 0.1)",
               fill: true,
               tension: 0.3
             }
@@ -412,7 +247,7 @@
           plugins: {
             tooltip: {
               callbacks: {
-                label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
+                label: ctx => `${ctx.dataset.label}: $${ctx.raw.toFixed(2)}`
               }
             }
           },
@@ -426,6 +261,36 @@
           }
         }
       });
+
+      const table = `
+        <table>
+          <thead>
+            <tr>
+              <th>Edad</th>
+              <th>Total acumulado</th>
+              <th>Aporte acumulado</th>
+              <th>Interés ganado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${results.map(r => `
+              <tr>
+                <td>${r.age}</td>
+                <td>$${r.total.toFixed(2)}</td>
+                <td>$${r.contribution.toFixed(2)}</td>
+                <td>$${r.interest.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      const container = document.getElementById("tableContainer");
+      container.innerHTML = table;
+      container.style.display = 'none';
+      const btn = document.getElementById("toggleTableBtn");
+      btn.style.display = 'inline-block';
+      btn.textContent = "Mostrar tabla detallada";
     }
   </script>
 </body>
